@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*$py.class
+matplotlib_cache/
+*.log
+.DS_Store
+.env
+.venv
+env/
+venv/
+*.zip
+run.bat

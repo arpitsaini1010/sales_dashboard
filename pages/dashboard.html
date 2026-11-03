@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sales Analytics Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #132A2E;
+    --parchment: #F6F1E7;
+    --panel: #FFFFFF;
+    --brass: #C1873A;
+    --teal: #2E6E63;
+    --rust: #B24B3E;
+    --olive: #7D8F6B;
+    --slate: #5C6B6A;
+    --line: #E4DCC9;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--parchment); color: var(--ink); font-family: 'Inter', system-ui, sans-serif; }
+  .fr { font-family: 'Fraunces', serif; }
+
+  header {
+    border-bottom: 1px solid var(--line);
+    padding: 24px 36px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    background: var(--panel);
+  }
+  .header-left {
+    display: flex;
+    flex-direction: column;
+  }
+  .eyebrow { font-size: 13px; color: var(--slate); margin-bottom: 6px; }
+  h1 { font-size: clamp(22px, 4vw, 30px); font-weight: 600; margin: 0; color: var(--ink); }
+
+  .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  select {
+    padding: 9px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--parchment);
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    min-width: 140px;
+  }
+  .upload-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--parchment);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s ease;
+  }
+  .upload-btn:hover { background: #0b1c1f; }
+  input[type=file] { display: none; }
+
+  .user-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    background: #FAF7F0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .user-badge strong { color: var(--teal); }
+  .logout-btn {
+    background: none;
+    border: none;
+    color: var(--rust);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background 0.15s ease;
+  }
+  .logout-btn:hover { background: #FBEAE7; }
+
+  .meta-row {
+    padding: 12px 36px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--slate);
+    font-size: 13px;
+    flex-wrap: wrap;
+  }
+  .meta-row .dot { opacity: .5; }
+
+  .error-box {
+    margin: 16px 36px 0;
+    padding: 12px 16px;
+    background: #FBEAE7;
+    border: 1px solid var(--rust);
+    border-radius: 8px;
+    color: var(--rust);
+    font-size: 14px;
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .error-box.show { display: flex; }
+  .error-box .close { cursor: pointer; font-weight: 700; font-size: 18px; }
+
+  main { padding: 22px 36px 48px; display: grid; gap: 18px; max-width: 1440px; margin: 0 auto; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+  .kpi-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(19,42,46,0.08); }
+  .kpi-label { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; font-size: 12px; font-weight: 600; color: var(--slate); }
+  .kpi-value { font-size: 24px; font-weight: 600; color: var(--ink); }
+  .kpi-sub { font-size: 11px; color: var(--slate); margin-top: 4px; }
+
+  .charts-row { display: grid; gap: 16px; }
+  .charts-row.two { grid-template-columns: 1.6fr 1fr; }
+  .charts-row.split { grid-template-columns: 1fr 1fr; }
+  .charts-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 900px) {
+    .charts-row.two, .charts-row.split, .charts-row.triple { grid-template-columns: 1fr; }
+  }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+  .panel h3 { font-size: 15px; font-weight: 600; margin: 0 0 4px; color: var(--ink); }
+  .panel .sub { font-size: 12px; color: var(--slate); margin-bottom: 12px; }
+
+  .chart-wrap {
+    position: relative;
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #FAF7F0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .chart-wrap img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 6px;
+  }
+  .chart-spinner {
+    font-size: 12.5px;
+    color: var(--slate);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .rank-list { display: flex; flex-direction: column; gap: 11px; padding-top: 2px; }
+  .rank-row .rank-head { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+  .rank-name { font-weight: 500; }
+  .rank-val { color: var(--slate); }
+  .rank-bar { height: 7px; background: var(--line); border-radius: 4px; overflow: hidden; }
+  .rank-fill { height: 100%; border-radius: 4px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { padding: 9px 10px; text-align: left; color: var(--slate); border-bottom: 1px solid var(--line); white-space: nowrap; font-weight: 600; }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td.num, th.num { text-align: right; }
+  .table-note { padding: 12px 10px 0; font-size: 12px; color: var(--slate); }
+  .table-scroll { overflow-x: auto; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1 class="fr">Sales Performance Dashboard</h1>
+  </div>
+  <div class="controls">
+    <select id="citySelect">
+      <option value="All">All Cities</option>
+    </select>
+    <label class="upload-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Upload CSV
+      <input type="file" id="fileInput" accept=".csv" />
+    </label>
+    <div class="user-badge">
+      <span>Hi, <strong id="usernameLabel">...</strong></span>
+      <button class="logout-btn" id="logoutBtn" title="Sign out">Logout</button>
+    </div>
+  </div>
+</header>
+
+<div class="meta-row">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+  <span id="fileName">clean_final_data.csv</span>
+  <span class="dot">·</span>
+  <span id="recordCount">Loading records...</span>
+  <span class="dot">·</span>
+  <span id="dateRange"></span>
+  <span class="dot">·</span>
+  <span>Viewing: <b id="viewing">All cities</b></span>
+</div>
+
+<div class="error-box" id="errorBox">
+  <span id="errorText"></span>
+  <span class="close" id="errorClose">&times;</span>
+</div>
+
+<main>
+  <section class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label" style="color:var(--teal);">Total Revenue</div>
+      <div class="kpi-value" id="kpiRevenue">...</div>
+      <div class="kpi-sub">from completed orders</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label" style="color:var(--brass);">Total Orders</div>
+      <div class="kpi-value" id="kpiOrders">...</div>
+      <div class="kpi-sub" id="kpiOrdersSub">...</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label" style="color:var(--rust);">Unique Customers</div>
+      <div class="kpi-value" id="kpiCustomers">...</div>
+      <div class="kpi-sub">across selected view</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label" style="color:var(--olive);">Avg Order Value</div>
+      <div class="kpi-value" id="kpiAOV">...</div>
+      <div class="kpi-sub">per completed order</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label" id="kpiCompletionColor">Completion Rate</div>
+      <div class="kpi-value" id="kpiCompletion">...</div>
+      <div class="kpi-sub" id="kpiCompletionSub">...</div>
+    </div>
+  </section>
+
+  <section class="charts-row two">
+    <div class="panel">
+      <h3 class="fr">Revenue Trend</h3>
+      <div class="sub">Monthly revenue from completed orders</div>
+      <div class="chart-wrap"><img id="img-revenueTrend" alt="Monthly Revenue Trend" /></div>
+    </div>
+    <div class="panel">
+      <h3 class="fr">Revenue by City</h3>
+      <div class="sub">All cities compared, selected city highlighted</div>
+      <div class="chart-wrap"><img id="img-revenueByCity" alt="Revenue by City" /></div>
+    </div>
+  </section>
+
+  <section class="charts-row split">
+    <div class="panel">
+      <h3 class="fr">Revenue by Category</h3>
+      <div class="sub">Product category performance</div>
+      <div class="chart-wrap"><img id="img-revenueByCategory" alt="Revenue by Category" /></div>
+    </div>
+    <div class="panel">
+      <h3 class="fr">Top Products</h3>
+      <div class="sub">Ranked by completed revenue</div>
+      <div class="rank-list" id="topProducts"></div>
+    </div>
+  </section>
+
+  <section class="charts-row triple">
+    <div class="panel">
+      <h3 class="fr">Payment Method</h3>
+      <div class="sub">Share of orders</div>
+      <div class="chart-wrap"><img id="img-paymentMethod" alt="Payment Method" /></div>
+    </div>
+    <div class="panel">
+      <h3 class="fr">Customer Segment</h3>
+      <div class="sub">Revenue by segment</div>
+      <div class="chart-wrap"><img id="img-customerSegment" alt="Customer Segment" /></div>
+    </div>
+    <div class="panel">
+      <h3 class="fr">Order Status</h3>
+      <div class="sub">Completed vs cancelled vs returned</div>
+      <div class="chart-wrap"><img id="img-orderStatus" alt="Order Status" /></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3 class="fr">Raw Data Sample</h3>
+    <div class="sub">Recent order records from dataset</div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th><th>Date</th><th>City</th><th>Category</th><th>Product</th>
+            <th>Segment</th><th>Payment</th><th>Status</th><th class="num">Qty</th><th class="num">Sales</th>
+          </tr>
+        </thead>
+        <tbody id="dataTableBody"></tbody>
+      </table>
+      <div class="table-note" id="tableNote"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+  const PALETTE = ["#2E6E63", "#C1873A", "#B24B3E", "#7D8F6B", "#8C6E4F", "#4E7A8C", "#9C7AA6", "#C4A35A"];
+  let currentCity = "All";
+
+  function fmtNum(n) {
+    if (n === undefined || n === null) return "0";
+    const sign = n < 0 ? "-" : "";
+    n = Math.abs(n);
+    if (n >= 1e9) return sign + (n / 1e9).toFixed(2) + "B";
+    if (n >= 1e6) return sign + (n / 1e6).toFixed(2) + "M";
+    if (n >= 1e3) return sign + (n / 1e3).toFixed(1) + "K";
+    return sign + n.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  }
+
+  function showError(msg) {
+    const box = document.getElementById("errorBox");
+    document.getElementById("errorText").textContent = msg;
+    box.classList.add("show");
+  }
+  function hideError() {
+    document.getElementById("errorBox").classList.remove("show");
+  }
+  document.getElementById("errorClose").addEventListener("click", hideError);
+
+  // Authentication check
+  async function checkAuth() {
+    try {
+      const res = await fetch("/api/me");
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+      const data = await res.json();
+      document.getElementById("usernameLabel").textContent = data.username || "User";
+    } catch (err) {
+      console.error("Auth check error:", err);
+    }
+  }
+
+  // Logout handler
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    try {
+      await fetch("/api/logout", { method: "POST" });
+    } finally {
+      window.location.href = "/login";
+    }
+  });
+
+  // Cities dropdown
+  async function loadCities() {
+    try {
+      const res = await fetch("/api/cities");
+      if (!res.ok) throw new Error();
+      const cities = await res.json();
+      const sel = document.getElementById("citySelect");
+      sel.innerHTML = cities.map(c => `<option value="${c}">${c === "All" ? "All Cities" : c}</option>`).join("");
+      sel.value = currentCity;
+    } catch (err) {
+      showError("Could not load cities list.");
+    }
+  }
+
+  // Summary & KPIs
+  async function loadSummary() {
+    try {
+      const res = await fetch(`/api/summary?city=${encodeURIComponent(currentCity)}`);
+      if (!res.ok) throw new Error();
+      const s = await res.json();
+
+      document.getElementById("kpiRevenue").textContent = "$" + fmtNum(s.totalRevenue);
+      document.getElementById("kpiOrders").textContent = s.totalOrders.toLocaleString("en-US");
+      document.getElementById("kpiOrdersSub").textContent = s.completedOrders.toLocaleString("en-US") + " completed";
+      document.getElementById("kpiCustomers").textContent = s.uniqueCustomers.toLocaleString("en-US");
+      document.getElementById("kpiAOV").textContent = "$" + fmtNum(s.avgOrderValue);
+      document.getElementById("kpiCompletion").textContent = s.completionRate.toFixed(1) + "%";
+
+      const cancelled = s.statusCounts?.Cancelled || 0;
+      const returned = s.statusCounts?.Returned || 0;
+      document.getElementById("kpiCompletionSub").textContent = `${cancelled} cancelled, ${returned} returned`;
+
+      document.getElementById("recordCount").textContent = s.totalOrders.toLocaleString("en-US") + " records";
+      document.getElementById("dateRange").textContent = s.dateRange ? `${s.dateRange[0]} to ${s.dateRange[1]}` : "";
+      document.getElementById("viewing").textContent = currentCity === "All" ? "All cities" : currentCity;
+
+      renderTopProducts(s.topProducts || []);
+    } catch (err) {
+      showError("Could not load summary data.");
+    }
+  }
+
+  function renderTopProducts(products) {
+    const container = document.getElementById("topProducts");
+    if (!products.length) {
+      container.innerHTML = `<div style="color:var(--slate);font-size:13px;padding:8px 0;">No product data available.</div>`;
+      return;
+    }
+    const max = products[0][1] || 1;
+    container.innerHTML = products.map((p, i) => `
+      <div class="rank-row">
+        <div class="rank-head">
+          <span class="rank-name">${i + 1}. ${p[0]}</span>
+          <span class="rank-val">$${fmtNum(p[1])}</span>
+        </div>
+        <div class="rank-bar">
+          <div class="rank-fill" style="width:${(p[1] / max) * 100}%; background:${PALETTE[i % PALETTE.length]}"></div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  // Table rows
+  async function loadTable() {
+    try {
+      const res = await fetch(`/api/table?city=${encodeURIComponent(currentCity)}`);
+      if (!res.ok) throw new Error();
+      const t = await res.json();
+      const body = document.getElementById("dataTableBody");
+      const rows = t.rows || [];
+      body.innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.OrderID || ""}</td>
+          <td>${r.OrderDate || ""}</td>
+          <td>${r.City || ""}</td>
+          <td>${r.Category || ""}</td>
+          <td>${r.ProductName || ""}</td>
+          <td>${r.CustomerSegment || ""}</td>
+          <td>${r.PaymentMethod || ""}</td>
+          <td>${r.Status || ""}</td>
+          <td class="num">${r.Quantity || ""}</td>
+          <td class="num">$${fmtNum(r.Sales)}</td>
+        </tr>
+      `).join("");
+      document.getElementById("tableNote").textContent = `Showing ${rows.length} sample rows from ${t.total?.toLocaleString("en-US")} total records`;
+    } catch (err) {
+      showError("Could not load table data.");
+    }
+  }
+
+  // Dynamic Python/Matplotlib charts
+  const CHART_KEYS = ["revenueTrend", "revenueByCity", "revenueByCategory", "paymentMethod", "customerSegment", "orderStatus"];
+  async function loadCharts() {
+    try {
+      const res = await fetch(`/api/charts?city=${encodeURIComponent(currentCity)}`);
+      if (!res.ok) throw new Error();
+      const charts = await res.json();
+      CHART_KEYS.forEach(k => {
+        const img = document.getElementById("img-" + k);
+        if (img && charts[k]) {
+          img.src = "data:image/png;base64," + charts[k];
+        }
+      });
+    } catch (err) {
+      showError("Could not generate server-side charts.");
+    }
+  }
+
+  async function refreshDashboard() {
+    hideError();
+    await Promise.all([loadSummary(), loadTable(), loadCharts()]);
+  }
+
+  document.getElementById("citySelect").addEventListener("change", (e) => {
+    currentCity = e.target.value;
+    refreshDashboard();
+  });
+
+  // CSV upload handler
+  document.getElementById("fileInput").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    hideError();
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showError(data.error || "File upload failed.");
+      } else {
+        document.getElementById("fileName").textContent = file.name;
+        currentCity = "All";
+        await loadCities();
+        await refreshDashboard();
+      }
+    } catch (err) {
+      showError("Error uploading CSV file.");
+    } finally {
+      e.target.value = "";
+    }
+  });
+
+  // Initialize
+  (async function init() {
+    await checkAuth();
+    await loadCities();
+    await refreshDashboard();
+  })();
+</script>
+</body>
+</html>

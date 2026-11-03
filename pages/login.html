@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Login · Sales Analytics Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #132A2E;
+    --parchment: #F6F1E7;
+    --panel: #FFFFFF;
+    --brass: #C1873A;
+    --teal: #2E6E63;
+    --rust: #B24B3E;
+    --olive: #7D8F6B;
+    --slate: #5C6B6A;
+    --line: #E4DCC9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 24px 16px;
+  }
+  .fr { font-family: 'Fraunces', serif; }
+
+  .brand-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--slate);
+    margin-bottom: 12px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .brand-badge .pill {
+    background: #E8E1D1;
+    color: var(--ink);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .login-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 10px 30px rgba(19, 42, 46, 0.06);
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 32px 32px 20px;
+    border-bottom: 1px solid var(--line);
+    text-align: center;
+  }
+  .card-header h1 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .card-header p {
+    margin: 8px 0 0;
+    font-size: 13.5px;
+    color: var(--slate);
+  }
+
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--line);
+    background: #FAF7F0;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 14px 16px;
+    border: none;
+    background: transparent;
+    color: var(--slate);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border-bottom: 2px solid transparent;
+  }
+  .tab-btn.active {
+    background: var(--panel);
+    color: var(--teal);
+    border-bottom-color: var(--teal);
+  }
+
+  .card-body {
+    padding: 28px 32px 32px;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .form-group input {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #FCFBF8;
+    color: var(--ink);
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.15s ease;
+  }
+  .form-group input:focus {
+    outline: none;
+    border-color: var(--teal);
+    background: #FFFFFF;
+  }
+  .form-group .hint {
+    font-size: 11.5px;
+    color: var(--slate);
+    margin-top: 5px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 12px 18px;
+    border-radius: 8px;
+    background: var(--teal);
+    color: #FFFFFF;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: background 0.15s ease, transform 0.05s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+  .submit-btn:hover {
+    background: #23544C;
+  }
+  .submit-btn:active {
+    transform: translateY(1px);
+  }
+
+  .alert {
+    padding: 11px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 18px;
+    display: none;
+  }
+  .alert.error {
+    background: #FBEAE7;
+    border: 1px solid var(--rust);
+    color: var(--rust);
+  }
+  .alert.success {
+    background: #EBF4F0;
+    border: 1px solid var(--teal);
+    color: var(--teal);
+  }
+</style>
+</head>
+<body>
+
+<div class="brand-badge">
+  <span>Sales Analytics Platform</span>
+</div>
+
+<div class="login-card">
+  <div class="card-header">
+    <h1 class="fr">Welcome Back</h1>
+    <p>Sign in to access the Sales Performance Dashboard</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tabLogin" type="button">Sign In</button>
+    <button class="tab-btn" id="tabRegister" type="button">Create Account</button>
+  </div>
+
+  <div class="card-body">
+    <div id="alertBox" class="alert"></div>
+
+    <!-- Login Form -->
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="loginUsername">Username</label>
+        <input type="text" id="loginUsername" required autocomplete="username" placeholder="Enter your username" />
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••" />
+      </div>
+      <button type="submit" class="submit-btn" id="loginBtn">Sign In</button>
+    </form>
+
+    <!-- Register Form -->
+    <form id="registerForm" style="display:none;">
+      <div class="form-group">
+        <label for="regUsername">Username</label>
+        <input type="text" id="regUsername" required placeholder="3-30 letters, numbers, _" />
+        <div class="hint">Alphanumeric or underscore (3 to 30 characters)</div>
+      </div>
+      <div class="form-group">
+        <label for="regEmail">Email Address (Optional)</label>
+        <input type="email" id="regEmail" placeholder="user@example.com" />
+      </div>
+      <div class="form-group">
+        <label for="regPassword">Password</label>
+        <input type="password" id="regPassword" required placeholder="At least 6 characters" />
+        <div class="hint">Minimum 6 characters</div>
+      </div>
+      <button type="submit" class="submit-btn" id="regBtn">Create Account</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const tabLogin = document.getElementById("tabLogin");
+  const tabRegister = document.getElementById("tabRegister");
+  const loginForm = document.getElementById("loginForm");
+  const registerForm = document.getElementById("registerForm");
+  const alertBox = document.getElementById("alertBox");
+
+  function showAlert(msg, isError = true) {
+    alertBox.textContent = msg;
+    alertBox.className = "alert " + (isError ? "error" : "success");
+    alertBox.style.display = "block";
+  }
+
+  function hideAlert() {
+    alertBox.style.display = "none";
+  }
+
+  function switchTab(mode) {
+    hideAlert();
+    if (mode === "login") {
+      tabLogin.classList.add("active");
+      tabRegister.classList.remove("active");
+      loginForm.style.display = "block";
+      registerForm.style.display = "none";
+    } else {
+      tabRegister.classList.add("active");
+      tabLogin.classList.remove("active");
+      loginForm.style.display = "none";
+      registerForm.style.display = "block";
+    }
+  }
+
+  tabLogin.addEventListener("click", () => switchTab("login"));
+  tabRegister.addEventListener("click", () => switchTab("register"));
+
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    hideAlert();
+    const btn = document.getElementById("loginBtn");
+    btn.disabled = true;
+    btn.textContent = "Signing in...";
+
+    const username = document.getElementById("loginUsername").value.trim();
+    const password = document.getElementById("loginPassword").value;
+
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showAlert(data.error || "Login failed. Please check your credentials.");
+      } else {
+        showAlert("Login successful! Redirecting...", false);
+        setTimeout(() => { window.location.href = "/"; }, 500);
+      }
+    } catch (err) {
+      showAlert("Network error. Please make sure the Flask server is running.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Sign In";
+    }
+  });
+
+  registerForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    hideAlert();
+    const btn = document.getElementById("regBtn");
+    btn.disabled = true;
+    btn.textContent = "Creating account...";
+
+    const username = document.getElementById("regUsername").value.trim();
+    const email = document.getElementById("regEmail").value.trim();
+    const password = document.getElementById("regPassword").value;
+
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showAlert(data.error || "Failed to create account.");
+      } else {
+        showAlert("Account created successfully! Redirecting...", false);
+        setTimeout(() => { window.location.href = "/"; }, 600);
+      }
+    } catch (err) {
+      showAlert("Network error. Please make sure the Flask server is running.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Create Account";
+    }
+  });
+</script>
+</body>
+</html>
